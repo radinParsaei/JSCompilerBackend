@@ -1,0 +1,22 @@
+{
+  "name": "JSCompilerBackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "javaBuild": "cd teavm-compiler-backend && mvn package && cp target/teavm-compiler-backend-1.0-SNAPSHOT/teavm/classes.js ../lib && echo '\\nexport {main}' >> ../lib/classes.js",
+    "build": "babel lib -d dist",
+    "start": "npm run javaBuild && npm run build && echo '\\n' && node dist/index.js",
+    "serve": "npm run start"
+  },
+  "author": "radinParsaei",
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "@babel/register": "^7.4.0"
+  },
+  "dependencies": {
+    "xmldom": "^0.6.0"
+  }
+}
