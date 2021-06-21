@@ -2384,12 +2384,38 @@ public class SyntaxTree {
       ValueBase v1 = this.v1, v2 = this.v2;
       v1.setConfigData(data);
       v2.setConfigData(data);
-      if (!(v1 instanceof Number || v1 instanceof Text || v1 instanceof Boolean || v1 instanceof Null || v1 instanceof List)) {
+      if (!(v1 instanceof Number || v1 instanceof Text || v1 instanceof Boolean || v1 instanceof Null || v1 instanceof List || v1 instanceof CreateInstance)) {
         v1 = (ValueBase)v1.getData();
       }
-      if (!(v2 instanceof Number || v2 instanceof Text || v2 instanceof Boolean || v2 instanceof Null || v2 instanceof List)) {
+      if (!(v2 instanceof Number || v2 instanceof Text || v2 instanceof Boolean || v2 instanceof Null || v2 instanceof List || v2 instanceof CreateInstance)) {
         v2 = (ValueBase)v2.getData();
       }
+      if (v1 instanceof CreateInstance) {
+        boolean overloaded = false;
+        for (Map.Entry<String, ProgramBase> entry : functions.entrySet()) {
+          if (entry.getKey().matches("#C" + ((CreateInstance) v1).getClassName() + "#Xor:,((?!,).)+")) {
+            overloaded = true;
+            break;
+          }
+        }
+        if (overloaded) {
+          return new SyntaxTree.CallFunction("Xor", v2).fromInstance(v1).setAddInstanceName(true).getData();
+        }
+      }
+      if (v2 instanceof CreateInstance) {
+        boolean overloaded = false;
+        for (Map.Entry<String, ProgramBase> entry : functions.entrySet()) {
+          if (entry.getKey().matches("#C" + ((CreateInstance) v2).getClassName() + "#Xor:,((?!,).)+")) {
+            overloaded = true;
+            break;
+          }
+        }
+        if (overloaded) {
+          return new SyntaxTree.CallFunction("Xor", v1).fromInstance(v2).setAddInstanceName(true).getData();
+        }
+      }
+      if (v1 instanceof CreateInstance) v1 = getTextFromInstance(v1);
+      if (v2 instanceof CreateInstance) v2 = getTextFromInstance(v2);
       if (v1 instanceof Boolean && v2 instanceof Boolean) {
         return new Boolean((boolean)v1.getData() ^ (boolean)v2.getData());
       } else if (v1 instanceof Number && v2 instanceof Number) {
@@ -2453,9 +2479,22 @@ public class SyntaxTree {
     public Object getData() {
       ValueBase value = this.value;
       value.setConfigData(data);
-      if (!(value instanceof Number || value instanceof Text || value instanceof Boolean || value instanceof Null || value instanceof List)) {
+      if (!(value instanceof Number || value instanceof Text || value instanceof Boolean || value instanceof Null || value instanceof List || value instanceof CreateInstance)) {
         value = (ValueBase)value.getData();
       }
+      if (value instanceof CreateInstance) {
+        boolean overloaded = false;
+        for (Map.Entry<String, ProgramBase> entry : functions.entrySet()) {
+          if (entry.getKey().matches("#C" + ((CreateInstance) value).getClassName() + "#Not:")) {
+            overloaded = true;
+            break;
+          }
+        }
+        if (overloaded) {
+          return new SyntaxTree.CallFunction("Not").fromInstance(value).setAddInstanceName(true).getData();
+        }
+      }
+      if (value instanceof CreateInstance) value = getTextFromInstance(value);
       if (value instanceof Number) {
         return new Boolean((((BigDecimal) value.getData()).compareTo(BigDecimal.ZERO) == 0));
       } else if (value instanceof Boolean) {
@@ -2481,9 +2520,22 @@ public class SyntaxTree {
     public Object getData() {
       ValueBase value = this.value;
       value.setConfigData(data);
-      if (!(value instanceof Number || value instanceof Text || value instanceof Boolean || value instanceof Null || value instanceof List)) {
+      if (!(value instanceof Number || value instanceof Text || value instanceof Boolean || value instanceof Null || value instanceof List || value instanceof CreateInstance)) {
         value = (ValueBase)value.getData();
       }
+      if (value instanceof CreateInstance) {
+        boolean overloaded = false;
+        for (Map.Entry<String, ProgramBase> entry : functions.entrySet()) {
+          if (entry.getKey().matches("#C" + ((CreateInstance) value).getClassName() + "#BitwiseNot:")) {
+            overloaded = true;
+            break;
+          }
+        }
+        if (overloaded) {
+          return new SyntaxTree.CallFunction("BitwiseNot").fromInstance(value).setAddInstanceName(true).getData();
+        }
+      }
+      if (value instanceof CreateInstance) value = getTextFromInstance(value);
       if (value instanceof Number) {
         return ~((BigDecimal)value.getData()).intValue();
       } else if (value instanceof Boolean) {

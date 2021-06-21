@@ -16,7 +16,7 @@ public class XMLToSyntaxTree {
     @JSBody(params = { "xml" }, script = "return xml.nodeName;")
     private static native String getName(JSObject xml);
 
-    @JSBody(params = { "xml" }, script = "return xml.innerHTML;")
+    @JSBody(params = { "xml" }, script = "return xml.textContent;")
     private static native String getNodeValue(JSObject xml);
 
     @JSBody(params = { "xml" }, script = "return xml.attributes[0].value;")
@@ -75,6 +75,9 @@ public class XMLToSyntaxTree {
             case "number":
             case "n":
                 return new SyntaxTree.Number(new BigDecimal(getNodeValue(node)));
+            case "bool":
+            case "b":
+                return new SyntaxTree.Boolean(getNodeValue(node).toLowerCase().equals("true"));
             case "text":
             case "t":
                 return new SyntaxTree.Text(getData(node));
