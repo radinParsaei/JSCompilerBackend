@@ -25,6 +25,9 @@ public class XMLToSyntaxTree {
     @JSBody(params = { "xml" }, script = "return xml.nextSibling;")
     private static native JSObject nextElement(JSObject xml);
 
+    @JSBody(params = { "xml", "parameter" }, script = "return xml.attributes[0].name == parameter? xml.attributes[0].value:xml.attributes[1].value") // because we have two parameters maximum
+    private static native String getParameter(JSObject xml, String parameter);
+
     public ProgramBase xmlToProgram(String xml) {
         JSObject node = nextElement(getFirstChild(getDocumentFromXml(xml)));
         if (!getName(node).equals("program") && !getName(node).equals("pr")) return new SyntaxTree.Programs();
@@ -53,6 +56,39 @@ public class XMLToSyntaxTree {
                     valuesArray[i] = values.get(i);
                 }
                 programs.add(new SyntaxTree.Print(valuesArray).setSeparator(separator));
+            } else if (getName(node).equals("if") || getName(node).equals("i")) {
+                ProgramBase elseProgram = null;
+                ValueBase condition = getValueFromNode(getFirstChild(getFirstChild(node)));
+                ProgramBase program = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
+                try {
+                    elseProgram = xmlToProgram(getFirstChild(nextElement(nextElement(getFirstChild(node)))));
+                } catch (Exception ignore) {
+                }
+                SyntaxTree.If _if = new SyntaxTree.If(condition, program);
+                if (elseProgram != null) _if.addElse(elseProgram);
+                programs.add(_if);
+            } else if (getName(node).equals("while") || getName(node).equals("w")) {
+                ValueBase condition = getValueFromNode(getFirstChild(getFirstChild(node)));
+                ProgramBase program = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
+                programs.add(new SyntaxTree.While(condition, program));
+            } else if (getName(node).equals("function") || getName(node).equals("fun")) {
+                programs.add(new SyntaxTree.Function(getParameter(node, getName(node).equals("fun")? "n":"name"), xmlToProgram(getFirstChild(node)), getParameter(node, getName(node).equals("fun")? "a":"args").split(",")));
+            } else if (getName(node).equals("break") || getName(node).equals("br")) {
+                programs.add(new SyntaxTree.Break());
+            } else if (getName(node).equals("continue") || getName(node).equals("con")) {
+                programs.add(new SyntaxTree.Continue());
+            } else if (getName(node).equals("set-variable") || getName(node).equals("set")) {
+                programs.add(new SyntaxTree.SetVariable(getParameter(node, getName(node).equals("set")? "n":"name"), getValueFromNode(getFirstChild(getFirstChild(node)))));
+            } else if (getName(node).equals("repeat") || getName(node).equals("r")) {
+                programs.add(new SyntaxTree.Repeat(getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))), xmlToProgram(getFirstChild(getFirstChild(node)))));
+            } else if (getName(node).equals("for") || getName(node).equals("f")) {
+                ValueBase condition;
+                ProgramBase step, init, program;
+                init = xmlToProgram(getFirstChild(getFirstChild(node)));
+                step = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
+                program = xmlToProgram(getFirstChild(nextElement(nextElement(getFirstChild(node)))));
+                condition = getValueFromNode(getFirstChild(nextElement(nextElement(nextElement(getFirstChild(node))))));
+                programs.add(new SyntaxTree.For(condition, step, init, program));
             } else if (getName(node).equals("executeValue") || getName(node).equals("ev")) {
                 ValueBase value = null;
                 JSObject node1 = getFirstChild(node);
@@ -153,9 +189,33 @@ public class XMLToSyntaxTree {
             case "bitwise-or":
             case "bo":
                 return new SyntaxTree.BitwiseOr(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "not":
+            case "n1":
+                return new SyntaxTree.Not(getValueFromNode(getFirstChild(node)));
             case "exitFunction":
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
+            case "variable":
+            case "v":
+                return new SyntaxTree.Variable(getNodeValue(node));
+            case "increase":
+            case "in":
+                return new SyntaxTree.Increase((SyntaxTree.Variable) getValueFromNode(getFirstChild(node)), getParameter(node, getName(node).equals("in")? "p":"is-postfix").equals("true"));
+            case "decrease":
+            case "de":
+                return new SyntaxTree.Decrease((SyntaxTree.Variable) getValueFromNode(getFirstChild(node)), getParameter(node, getName(node).equals("de")? "p":"is-postfix").equals("true"));
+            case "call-function":
+            case "c": {
+                ArrayList<ValueBase> values = new ArrayList<>();
+                JSObject node_ = getFirstChild(node);
+                while (node_ != null) {
+                    values.add(getValueFromNode(getFirstChild(node_)));
+                    node_ = nextElement(node_);
+                }
+                ValueBase[] valuesArray = new ValueBase[values.size()];
+                valuesArray = values.toArray(valuesArray);
+                return new SyntaxTree.CallFunction(getParameter(node, getName(node).equals("c")? "n":"name"), valuesArray);
+            }
         }
         return new SyntaxTree.Null();
     }
