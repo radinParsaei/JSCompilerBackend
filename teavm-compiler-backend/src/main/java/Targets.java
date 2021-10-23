@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class Targets {
     public static final boolean isWeb = true;
-    public static final boolean isInThread = true;
+    public static final boolean isInThread = false;
     public static final boolean systemPrint = true;
     public static final boolean useAnalyzer = false;
     public static int count = 0;
