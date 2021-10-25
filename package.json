@@ -6,7 +6,7 @@
   "scripts": {
     "javaBuild": "cd teavm-compiler-backend && mvn package && cp target/teavm-compiler-backend-1.0-SNAPSHOT/teavm/classes.js ../lib && echo '\\nexport {main}' >> ../lib/classes.js",
     "build": "babel lib -d dist",
-    "start": "npm run javaBuild && npm run build && echo '\\n' && node dist/index.js",
+    "start": "npm run build && echo '\\n' && node dist/index.js",
     "serve": "npm run start"
   },
   "author": "radinParsaei",
